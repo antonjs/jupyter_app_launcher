@@ -69,36 +69,31 @@ async function activate(
         // Get current file browser path for variable substitution
         const currentBrowserPath = fileBrowser?.model.path || '';
 
-        // Clone config to avoid mutating the original
+        // Clone config and replace $BROWSER_DIR in all relevant fields
         const resolvedConfig = { ...config };
 
-        // Replace $BROWSER_DIR variable in cwd if present
+        // Replace in cwd
         if (resolvedConfig.cwd && typeof resolvedConfig.cwd === 'string') {
           resolvedConfig.cwd = resolvedConfig.cwd.replace(
             /\$BROWSER_DIR/g,
             currentBrowserPath
           );
-          console.log("cwd:", resolvedConfig.cwd);
         }
 
-        // Replace $BROWSER_DIR in args if present
-        if (resolvedConfig.args) {
-          console.log("args:", resolvedConfig.args);
-          const argsStr = JSON.stringify(resolvedConfig.args);
-          console.log("argStr:", argsStr);
-          resolvedConfig.args = JSON.parse(
-            argsStr.replace(/\$BROWSER_DIR/g, currentBrowserPath)
-          );
-          console.log("replace:", resolvedConfig.args);
-        }
-
-        // Replace $BROWSER_DIR in source if present (for terminal commands, etc.)
+        // Replace in source (for terminals, etc.)
         if (resolvedConfig.source && typeof resolvedConfig.source === 'string') {
           resolvedConfig.source = resolvedConfig.source.replace(
             /\$BROWSER_DIR/g,
             currentBrowserPath
           );
-          console.log("source:", resolvedConfig.source);
+        }
+
+        // Replace in args
+        if (resolvedConfig.args) {
+          const argsStr = JSON.stringify(resolvedConfig.args);
+          resolvedConfig.args = JSON.parse(
+            argsStr.replace(/\$BROWSER_DIR/g, currentBrowserPath)
+          );
         }
 
         const wrapper = new BoxPanel({

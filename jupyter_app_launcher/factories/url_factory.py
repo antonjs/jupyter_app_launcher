@@ -15,17 +15,13 @@ class URLFactory(BaseFactory):
         return "local-server"
 
     def process(self, request: Dict, **kwargs) -> str:
-        # Determine the working directory:
-        # 1. Use cwd from request (passed from frontend, may include browser path)
-        # 2. Fall back to config.cwd (from YAML)
-        # 3. Fall back to None (will use process default)
+        # Use values from request (already resolved on frontend)
+        # Fall back to config values if not provided
         cwd = request.get("cwd", self._config.get("cwd", None))
+        args = self._config.get("args", [])
+        source = self._config.get("source")
 
-        base_url, p = self.start_server(
-            self._config.get("args", []),
-            cwd,
-            self._config.get("source"),
-        )
+        base_url, p = self.start_server(args, cwd, source)
         self._instances[request["instanceId"]] = p
         return base_url
 
@@ -53,8 +49,14 @@ class URLFactory(BaseFactory):
         else:
             url_suffix = ""
         base_url = f"proxy/{port}{url_suffix}"
+
         if len(args) > 0:
-            cmd = [arg.replace("$PORT", str(port)) for arg in args]
+            cmd = list()
+            for arg in args:
+                arg.replace("$PORT", str(port))
+                arg.replace("$CWD", cwd)
+                cmd.append(arg)
+
             p = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=cwd)
 
         if check_url(source.replace("$PORT", str(port))):
