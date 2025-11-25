@@ -13,12 +13,14 @@ export class LocalServerFactory implements IPanelFactory {
     args: IDict
   ): Promise<ILauncherApp> {
     const instanceId = UUID.uuid4();
+
     const serverUrlPromise = requestAPI<string>({
       method: 'POST',
       body: JSON.stringify({
         method: 'request_resources',
         id: config.id,
-        instanceId
+        instanceId,
+        cwd: config.cwd
       })
     });
     const widget = new IFrame({

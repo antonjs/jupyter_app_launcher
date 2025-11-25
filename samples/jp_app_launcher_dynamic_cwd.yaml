@@ -1,0 +1,85 @@
+# Sample configuration demonstrating dynamic working directory (cwd) feature
+#
+# Use the $BROWSER_DIR variable to reference the current Jupyter file browser directory
+# This variable works just like $PORT - it gets replaced at runtime with the actual path
+#
+# The cwd field can be set in three ways:
+# 1. Statically with a hardcoded path
+# 2. Dynamically using $BROWSER_DIR variable
+# 3. Combined using $BROWSER_DIR with subdirectories
+
+# Example 1: Static cwd - always runs in the specified directory
+- title: Python Server (Static Dir)
+  description: HTTP server with hardcoded working directory
+  source: http://localhost:$PORT/
+  cwd: /tmp
+  type: local-server
+  args:
+    - python
+    - -m
+    - http.server
+    - $PORT
+  catalog: CWD Examples
+
+# Example 2: Dynamic cwd - uses current file browser directory
+# The $BROWSER_DIR variable gets replaced with the current browser path
+- title: Python Server (Browser Dir)
+  description: HTTP server using current browser directory as cwd
+  source: http://localhost:$PORT/
+  cwd: $BROWSER_DIR
+  type: local-server
+  args:
+    - python
+    - -m
+    - http.server
+    - $PORT
+  catalog: CWD Examples
+
+# Example 3: Terminal with dynamic cwd
+# The terminal will open in the directory you're currently viewing in the file browser
+- title: Terminal (Browser Dir)
+  description: Terminal that opens in current browser directory
+  source: 'pwd && echo "Browser dir: $BROWSER_DIR" && ls -la'
+  cwd: $BROWSER_DIR
+  args:
+    reuse: false
+  type: terminal
+  catalog: CWD Examples
+
+# Example 4: Combined path - browser directory + subdirectory
+# This will cd to a subdirectory relative to the browser location
+- title: Terminal (Browser Subdir)
+  description: Terminal in subdirectory of browser location
+  source: 'pwd && ls -la'
+  cwd: $BROWSER_DIR/data
+  args:
+    reuse: false
+  type: terminal
+  catalog: CWD Examples
+
+# Example 5: Using $BROWSER_DIR in terminal command
+# You can use the variable in the source command too!
+- title: List Browser Directory
+  description: Show files in current browser directory
+  source: 'cd "$BROWSER_DIR" && pwd && ls -la'
+  args:
+    reuse: false
+  type: terminal
+  catalog: CWD Examples
+
+# Example 6: Custom app using browser directory in multiple places
+- title: Custom App (Browser Dir)
+  description: Run a custom Python script in current directory
+  source: http://localhost:$PORT/
+  cwd: $BROWSER_DIR
+  type: local-server
+  args:
+    - python
+    - -c
+    - |
+      import http.server
+      import os
+      print(f'Starting server in: {os.getcwd()}')
+      print(f'Browser was at: $BROWSER_DIR')
+      http.server.test(HandlerClass=http.server.SimpleHTTPRequestHandler, port=$PORT)
+  catalog: CWD Examples

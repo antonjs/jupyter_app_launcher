@@ -15,9 +15,15 @@ class URLFactory(BaseFactory):
         return "local-server"
 
     def process(self, request: Dict, **kwargs) -> str:
+        # Determine the working directory:
+        # 1. Use cwd from request (passed from frontend, may include browser path)
+        # 2. Fall back to config.cwd (from YAML)
+        # 3. Fall back to None (will use process default)
+        cwd = request.get("cwd", self._config.get("cwd", None))
+
         base_url, p = self.start_server(
             self._config.get("args", []),
-            self._config.get("cwd", None),
+            cwd,
             self._config.get("source"),
         )
         self._instances[request["instanceId"]] = p

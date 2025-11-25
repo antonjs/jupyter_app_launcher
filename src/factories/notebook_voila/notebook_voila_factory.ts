@@ -21,7 +21,8 @@ export class NotebookVoilaFactory implements IPanelFactory {
         method: 'request_resources',
         id: config.id,
         instanceId,
-        labBasePrefix
+        labBasePrefix,
+        cwd: config.cwd
       })
     });
     const widget = new IFrame({

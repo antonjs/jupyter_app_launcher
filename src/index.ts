@@ -7,6 +7,7 @@ import { MainAreaWidget } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IRunningSessionManagers } from '@jupyterlab/running';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 
 import { AppTracker } from './app_tracker';
 import { fetchLauncherData } from './handler';
@@ -28,7 +29,7 @@ const plugin: JupyterFrontEndPlugin<IAppTracker> = {
   id: 'jupyter_app_launcher:plugin',
   autoStart: true,
   requires: [ILauncher, IPanelFactoryManager],
-  optional: [IRunningSessionManagers],
+  optional: [IRunningSessionManagers, IDefaultFileBrowser],
   activate,
   provides: IAppTracker
 };
@@ -37,7 +38,8 @@ async function activate(
   app: JupyterFrontEnd,
   launcher: ILauncher,
   panelFactory: IPanelFactoryManager,
-  runningManager?: IRunningSessionManagers
+  runningManager?: IRunningSessionManagers,
+  fileBrowser?: IDefaultFileBrowser
 ): Promise<IAppTracker> {
   console.log('JupyterLab extension jupyter_app_launcher is activated!');
 
@@ -63,6 +65,37 @@ async function activate(
         if (!factory) {
           return;
         }
+
+        // Get current file browser path for variable substitution
+        const currentBrowserPath = fileBrowser?.model.path || '';
+
+        // Clone config to avoid mutating the original
+        const resolvedConfig = { ...config };
+
+        // Replace $BROWSER_DIR variable in cwd if present
+        if (resolvedConfig.cwd && typeof resolvedConfig.cwd === 'string') {
+          resolvedConfig.cwd = resolvedConfig.cwd.replace(
+            /\$BROWSER_DIR/g,
+            currentBrowserPath
+          );
+        }
+
+        // Replace $BROWSER_DIR in args if present
+        if (resolvedConfig.args) {
+          const argsStr = JSON.stringify(resolvedConfig.args);
+          resolvedConfig.args = JSON.parse(
+            argsStr.replace(/\$BROWSER_DIR/g, currentBrowserPath)
+          );
+        }
+
+        // Replace $BROWSER_DIR in source if present (for terminal commands, etc.)
+        if (resolvedConfig.source && typeof resolvedConfig.source === 'string') {
+          resolvedConfig.source = resolvedConfig.source.replace(
+            /\$BROWSER_DIR/g,
+            currentBrowserPath
+          );
+        }
+
         const wrapper = new BoxPanel({
           direction: 'top-to-bottom',
           spacing: 0
@@ -92,7 +125,7 @@ async function activate(
           app.shell.add(main, 'main');
         }
         factory
-          .create(config, args)
+          .create(resolvedConfig, args)
           .then(launcherApp => {
             if (launcherApp) {
               const { panel, ready } = launcherApp;

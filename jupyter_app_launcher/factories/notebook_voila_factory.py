@@ -17,10 +17,18 @@ class NotebookVoilaFactory(BaseFactory):
 
     def process(self, request: Dict, **kwargs) -> str:
         lab_base_prefix = request.get("labBasePrefix")
+
+        # Determine the working directory:
+        # 1. Use cwd from request (passed from frontend, may include browser path)
+        # 2. Fall back to config.cwd (from YAML)
+        # 3. Fall back to None (will use process default)
+        cwd = request.get("cwd", self._config.get("cwd", None))
+
         base_url, p = self.start_voila(
             self._config["source"],
             self._config.get("args", {}),
             lab_base_prefix,
+            cwd,
         )
 
         self._instances[request["instanceId"]] = p
@@ -44,6 +52,7 @@ class NotebookVoilaFactory(BaseFactory):
         notebook_path: str,
         voila_args: Union[Dict, List],
         lab_base_prefix: str,
+        cwd: str = None,
     ) -> Tuple[str, Popen]:
         port = get_free_port()
         base_url = f"proxy/absolute/{port}/"
@@ -69,7 +78,7 @@ class NotebookVoilaFactory(BaseFactory):
             f"--port={port}",
             f"--Voila.base_url={lab_base_prefix}{base_url}",
         ] + custom_args
-        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        p = Popen(args, stdout=PIPE, stderr=PIPE, cwd=cwd)
         check = 0
         while True:
             if check > 200:  # Timeout is 200*0.5 seconds
