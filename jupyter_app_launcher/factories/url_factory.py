@@ -4,6 +4,10 @@ from typing import Dict, List, Tuple, Union
 from ..utils import check_url, get_free_port
 from .base_factory import BaseFactory
 
+import logging
+
+log = logging.getLogger("jupyter_app_launcher")
+
 
 class URLFactory(BaseFactory):
     def __init__(self, config: Dict, **kwargs) -> None:
@@ -41,6 +45,10 @@ class URLFactory(BaseFactory):
     def start_server(
         self, args: List[str], cwd: str, source: str
     ) -> Tuple[str, Union[None, Popen]]:
+        log.info(
+            f"Starting server. Args: {", ".join(args)}. Cwd: {cwd}. Source: {source}"
+        )
+
         port = get_free_port()
         p = None
         url_list = source.split("$PORT")
@@ -53,10 +61,13 @@ class URLFactory(BaseFactory):
         if len(args) > 0:
             cmd = list()
             for arg in args:
-                arg.replace("$PORT", str(port))
-                arg.replace("$CWD", cwd)
+                log.info(f"Parsing arg: {arg}")
+                arg = arg.replace("$PORT", str(port))
+                arg = arg.replace("$CWD", cwd)
+                log.info(f"Arg is now {arg}")
                 cmd.append(arg)
 
+            log.info(f"Running command: {cmd}, cwd={cwd}")
             p = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=cwd)
 
         if check_url(source.replace("$PORT", str(port))):
