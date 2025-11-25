@@ -78,14 +78,18 @@ async function activate(
             /\$BROWSER_DIR/g,
             currentBrowserPath
           );
+          console.log("cwd:", resolvedConfig.cwd);
         }
 
         // Replace $BROWSER_DIR in args if present
         if (resolvedConfig.args) {
+          console.log("args:", resolvedConfig.args);
           const argsStr = JSON.stringify(resolvedConfig.args);
+          console.log("argStr:", argsStr);
           resolvedConfig.args = JSON.parse(
             argsStr.replace(/\$BROWSER_DIR/g, currentBrowserPath)
           );
+          console.log("replace:", resolvedConfig.args);
         }
 
         // Replace $BROWSER_DIR in source if present (for terminal commands, etc.)
@@ -94,6 +98,7 @@ async function activate(
             /\$BROWSER_DIR/g,
             currentBrowserPath
           );
+          console.log("source:", resolvedConfig.source);
         }
 
         const wrapper = new BoxPanel({
