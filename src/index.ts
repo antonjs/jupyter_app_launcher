@@ -50,11 +50,13 @@ async function activate(
   const launcherData = await fetchLauncherData(appName);
   function createCommand(config: ILauncherConfiguration, idx: number): void {
     let icon: LabIcon;
+    console.log(config.icon);
     if (config.icon) {
       icon = iconFromSvgString(config.icon);
     } else {
       icon = iconFromText(config.title);
     }
+    console.log(icon);
 
     commands.addCommand(config.id, {
       label: config.title,
