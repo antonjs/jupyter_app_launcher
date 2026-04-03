@@ -46,7 +46,8 @@ class URLFactory(BaseFactory):
         self, args: List[str], cwd: str, source: str
     ) -> Tuple[str, Union[None, Popen]]:
         log.info(
-            f"Starting server. Args: {", ".join(args)}. Cwd: {cwd}. Source: {source}"
+            f"Starting server. Args: {', '.join(args)}. "
+            f"Cwd: {cwd}. Source: {source}"
         )
 
         port = get_free_port()
@@ -56,7 +57,11 @@ class URLFactory(BaseFactory):
             url_suffix = source.split("$PORT")[1]
         else:
             url_suffix = ""
-        base_url = f"proxy/{port}{url_suffix}"
+
+        # Use absolute proxy path if configured
+        use_absolute = self._config.get("absolute", False)
+        proxy_prefix = "proxy/absolute" if use_absolute else "proxy"
+        base_url = f"{proxy_prefix}/{port}{url_suffix}"
 
         if len(args) > 0:
             cmd = list()

@@ -50,6 +50,10 @@
           "type": "array"
         }
       ]
+    },
+    "absolute": {
+      "type": "boolean",
+      "description": "Use absolute proxy path (/proxy/absolute/[port]) instead of relative path (/proxy/[port]). Only applies to local-server type."
     }
   },
   "required": ["id", "title", "source", "type"],
